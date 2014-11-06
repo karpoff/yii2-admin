@@ -1,0 +1,23 @@
+{
+    "name": "karpoff/yii2-admin",
+    "description": "Admin module for Yii2 ",
+    "keywords": ["yii", "admin"],
+    "type": "yii2-extension",
+    "license": "GPL",
+    "support": {
+    },
+    "authors": [
+        {
+            "name": "Anton Karpov",
+            "email": "karpoff@bk.ru"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "yii\\admin\\": ""
+        }
+    }
+}
