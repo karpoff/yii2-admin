@@ -10,4 +10,5 @@ interface LangInterface
 	public function getCode();
 	public function getTitle();
 	public static function getAll();
+	public static function getCurrentId();
 }

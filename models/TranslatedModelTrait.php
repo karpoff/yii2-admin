@@ -17,9 +17,12 @@ trait TranslatedModelTrait
 					continue;
 
 				$rel_model = $model->getModel();
+				$trans_model = $model->getLang();
+				/** @var \yii\admin\models\LangInterface $trans_model_class */
+				$trans_model_class = $trans_model->modelClass;
 				$model_fk = array_keys($rel_model->link)[0];
 
-				return $this->hasOne($beh->model, [$rel_model->link[$model_fk] => $model_fk])->where([array_values($model->getLang()->link)[0] => \Yii::$app->controller->module->getLanguageId()]);
+				return $this->hasOne($beh->model, [$rel_model->link[$model_fk] => $model_fk])->where([array_values($trans_model->link)[0] => $trans_model_class::getCurrentId()]);
 			}
 		}
 		throw new InvalidConfigException('translate behavior is not properly configured');

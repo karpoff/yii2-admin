@@ -10,6 +10,9 @@ class Lang extends ActiveRecord implements LangInterface {
 		return 'yii_admin_lang';
 	}
 
+	/** @var $current \yii\admin\models\Lang  */
+	static $current;
+
 	public function rules() {
 		return [
 			[['name', 'code'], 'trim'],
@@ -17,6 +20,15 @@ class Lang extends ActiveRecord implements LangInterface {
 			[['enabled', 'admin'], 'boolean'],
 			[['sort'], 'integer'],
 		];
+	}
+
+	public static function getCurrentId()
+	{
+		if (!self::$current) {
+			self::$current = self::find()->where(['code' => \Yii::$app->language])->one();
+		}
+
+		return self::$current->getAttribute('id');
 	}
 
 	public function isEnabled() { return (bool) $this->getAttribute('enabled'); }
