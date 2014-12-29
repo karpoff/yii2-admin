@@ -1,0 +1,62 @@
+.clear:after {clear: both;content: "";display: block;height: 0;}
+li, a, button, span, .field {transition: all 0.3s ease 0s;}
+.hide {display:none;}
+.show {display:block;}
+a, a:focus, button, button:focus {outline: none !important;}
+
+.w10 {float:left;width:10%;}
+.w15 {float:left;width:15%;}
+.w20 {float:left;width:20%;}
+.w25 {float:left;width:20%;}
+.w30 {float:left;width:30%;}
+.w33 {float:left;width:33%;}
+.w34 {float:left;width:34%;}
+.w35 {float:left;width:35%;}
+.w40 {float:left;width:40%;}
+.w50 {float:left;width:50%;}
+.w60 {float:left;width:60%;}
+.w66 {float:left;width:66%;}
+.w67 {float:left;width:67%;}
+.w25 {float:left;width:25%;}
+.w70 {float:left;width:70%;}
+.w75 {float:left;width:75%;}
+.w80 {float:left;width:80%;}
+.w100 {width:auto;float:none;}
+
+
+#loader {background: url(../image/loader.gif) no-repeat center;display: none;height: 100%;left: 0;position: fixed;top: 0;width: 100%;}
+#loader div {width: 100%;height: 100%;background-color: #000;opacity: 0.1;}
+
+/* Messages */
+.messages {position:relative;background-color:#F4F5F7;padding:20px 20px 5px 20px;border-radius:3px;margin:20px;}
+.messages.error {background-color:#EDA6A7;border-color:#7A302F;color:#7A302F;}
+.messages.done {background-color:#A9D38C;border-color:#2F6848;color:#2F6848;}
+.messages p {margin-bottom:1em;}
+.messages a {color:#008CD1;font-family: 'plumb-bold';text-decoration:underline;}
+.messages a:hover {color:#79797F;}
+
+/* menu generator */
+/*#content .menu .tabs { width: 55em; }
+#content .menu .tabs .ui-tabs-nav { padding: .2em .1em .2em .2em; float: left; width: 12em; }
+#content .menu .tabs .ui-tabs-nav li { clear: left; width: 100%; border-bottom-width: 1px !important; border-right-width: 0 !important; margin: 0 -1px .2em 0; }
+#content .menu .tabs .ui-tabs-nav li a { display:block; }
+#content .menu .tabs .ui-tabs-nav li.ui-tabs-active { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; }
+#content .menu .tabs .ui-tabs-panel { padding: 1em; float: right; width: 40em;}*/
+
+#content .admin-menu.tabs {padding: 0;}
+#content .admin-menu.tabs .ui-widget-header {border: none;}
+#content .admin-menu.ui-widget-content {border: none;}
+#content .admin-menu.tabs .ui-tabs-nav {float: left;width: 10em;background: none;border: none;position: absolute;}
+#content .admin-menu.tabs .ui-tabs-nav li {clear: left;width: 100%;margin: 0.2em 0;border-color: gray;border-width:1px 0 1px 1px ;border-style:solid;border-radius: 4px 0 0 4px;overflow: hidden;position: relative;left: 5px;z-index: 2;}
+#content .admin-menu.tabs .ui-tabs-nav li a {display: block;width: 100%;padding: 0.6em 1em;}
+#content .admin-menu.tabs .ui-tabs-nav li a:hover {cursor: pointer;}
+#content .admin-menu.tabs .ui-tabs-nav li.ui-tabs-active {margin-bottom: 0.2em;padding-bottom: 0;border-right: 1px solid white;}
+#content .admin-menu.tabs .ui-tabs-nav li:last-child {margin-bottom: 10px;}
+#content .admin-menu.tabs .ui-tabs-panel {float: left;border-radius: 0;position: relative;left: -1px;padding: 0;width: 100%;padding: 0 0 0 10em;}
+#content .admin-menu > .ui-tabs-panel > form {padding-left: 40px;}
+
+.select2-hidden-accessible {display: none !important;visibility: hidden !important;}
+.tab-content > .tab-pane {padding: 20px;}
+
+.grid-action-column {padding: 2px;}
+.grid-action-column a {margin-right: 10px;font-size: larger;}
