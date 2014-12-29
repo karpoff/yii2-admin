@@ -127,7 +127,9 @@ class ModelForm extends ActiveForm
 		}).on('afterValidateAttribute', function(form, attribute, data, hasError) {
 			if (data.length) {
 				$(attribute.input).parents('.tab-pane').each(function() {
-					$('a[href=\"#'+$(this).attr('id')+'\"]', $(this).parent().prev()).addClass('alert-danger').append($('<span>', {'class': 'tab-icon-error glyphicon glyphicon-exclamation-sign', 'style': 'padding-left: 5px;'}));
+					var _tab = $('a[href=\"#'+$(this).attr('id')+'\"]', $(this).parent().prev());
+					if (!_tab.hasClass('alert-danger'))
+						_tab.addClass('alert-danger').append($('<span>', {'class': 'tab-icon-error glyphicon glyphicon-exclamation-sign', 'style': 'padding-left: 5px;'}));
 				});
 			}
 		}).on('beforeValidate', function(event) {

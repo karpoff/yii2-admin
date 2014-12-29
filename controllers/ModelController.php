@@ -222,6 +222,10 @@ class ModelController extends yii\admin\components\AdminController
 	public function actionValidate($id=null)
 	{
 		$model = $id ? $this->model->findOne($id) : $this->model;
+
+		if ($this->scenarios)
+			$model->scenario = $model->isNewRecord ? 'insert' : 'update';
+
 		$model->load(Yii::$app->request->post());
 		Yii::$app->response->format = 'json';
 		return ModelForm::validate($model);

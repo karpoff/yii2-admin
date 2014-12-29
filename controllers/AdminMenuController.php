@@ -80,7 +80,7 @@ class AdminMenuController extends ModelController
 		$this->jsModelFormOptions = [
 			'onSuccess' => "
 				$('ul:first li[aria-controls=\"'+_form.closest('.ui-tabs-panel').attr('id')+'\"]', _form.closest('.admin-menu')).trigger('form.updated', _frame.contents().find('body').html());
-				adminSuccessMessage(_form, 'Saved');
+				alert('Saved');
 			"
 		];
 
