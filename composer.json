@@ -15,6 +15,7 @@
     "require": {
         "yiisoft/yii2": "~2.0",
         "yiisoft/yii2-bootstrap": "*",
+        "yiisoft/yii2-jui": "*",
         "kartik-v/yii2-widget-select2": "*",
         "kartik-v/yii2-nav-x": "*"
     },
