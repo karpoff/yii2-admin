@@ -162,7 +162,7 @@ class MenuItem extends ActiveRecord {
 			$behaviors[] = [
 				'class' => TranslateBehavior::className(),
 				'attribute' => 'title',
-				'scenarios' => ['insert', 'update'],
+				'scenarios' => ['default'],
 				'model' => MenuItemText::className(),
 			];
 		}
