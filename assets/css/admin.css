@@ -52,7 +52,7 @@ a, a:focus, button, button:focus {outline: none !important;}
 #content .admin-menu.tabs .ui-tabs-nav li a:hover {cursor: pointer;}
 #content .admin-menu.tabs .ui-tabs-nav li.ui-tabs-active {margin-bottom: 0.2em;padding-bottom: 0;border-right: 1px solid white;}
 #content .admin-menu.tabs .ui-tabs-nav li:last-child {margin-bottom: 10px;}
-#content .admin-menu.tabs .ui-tabs-panel {float: left;border-radius: 0;position: relative;left: -1px;padding: 0;width: 100%;padding: 0 0 0 10em;}
+#content .admin-menu.tabs .ui-tabs-panel {float: left;border-radius: 0;position: relative;left: -1px;width: 100%;padding: 0 0 0 10em;}
 #content .admin-menu > .ui-tabs-panel > form {padding-left: 40px;}
 
 .select2-hidden-accessible {display: none !important;visibility: hidden !important;}
@@ -60,3 +60,15 @@ a, a:focus, button, button:focus {outline: none !important;}
 
 .grid-action-column {padding: 2px;}
 .grid-action-column a {margin-right: 10px;font-size: larger;}
+
+.alert-danger:after {
+	display: inline-block;
+	font-family: "Glyphicons Halflings";
+	font-style: normal;
+	font-weight: normal;
+	line-height: 1;
+	position: relative;
+	top: 1px;
+	content: "";
+	padding-left: 5px;
+}

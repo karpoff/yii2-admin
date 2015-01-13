@@ -13,16 +13,16 @@ class ModelForm extends ActiveForm
 	/* @var $model \yii\db\ActiveRecord */
 	public $model;
 	public $fields = [];
+
 	public $return_url;
-	public $frame_id;
 	public $actions;
 
 	public $onSuccess;
 	public $tabs;
-	public $findFieldConfig;
 
 	public $defaultClassPath;
 	public $showSubmitButton = true;
+	public $modal = false;
 
 	public function init()
 	{
@@ -42,13 +42,13 @@ class ModelForm extends ActiveForm
 			$this->options['id'] = $this->getId();
 		}
 
-		$this->frame_id = $this->options['id'] . '_frame';
-
 		$this->options['method'] = 'post';
 		$this->options['encoding'] = 'multipart/form-data';
 		$this->options['enctype'] = 'multipart/form-data';
-		$this->options['target'] = $this->options['id'] . '_frame';
 
+		if ($this->modal) {
+			$this->options['target'] = $this->options['id'] . '_frame';
+		}
 		echo Html::beginForm($this->action, $this->method, $this->options);
 
 		if ($this->actions) {
@@ -116,32 +116,16 @@ class ModelForm extends ActiveForm
 		}
 
 		$view = $this->getView();
-		$view->registerJs("jQuery('#{$this->options['id']}').on('beforeSubmit', function() {
-			var _form = $(this);
-			$('.messages', _form).slideUp(function() { $(this).remove(); });
-
-			var _frame = jQuery('#{$this->frame_id}');
-			_frame.unbind('load').on('load', function() {
-				{$this->onSuccess}
-			});
-		}).on('afterValidateAttribute', function(form, attribute, data, hasError) {
-			if (data.length) {
-				$(attribute.input).parents('.tab-pane').each(function() {
-					var _tab = $('a[href=\"#'+$(this).attr('id')+'\"]', $(this).parent().prev());
-					if (!_tab.hasClass('alert-danger'))
-						_tab.addClass('alert-danger').append($('<span>', {'class': 'tab-icon-error glyphicon glyphicon-exclamation-sign', 'style': 'padding-left: 5px;'}));
-				});
-			}
-		}).on('beforeValidate', function(event) {
-			$('.nav-tabs > li a', event.target).removeClass('alert-danger').find('.tab-icon-error').remove();
-		});");
+		$view->registerJs("$.yiiAdmin('initForm', '{$this->options['id']}')");
 		parent::run();
 
-		echo Html::tag('iframe', '', [
-			'id' => $this->frame_id,
-			'name' => $this->frame_id,
-			'style' => 'display: none',
-		]);
+		if ($this->modal) {
+			echo Html::tag('iframe', '', [
+				'id' => $this->options['id'] . '_frame',
+				'name' => $this->options['id'] . '_frame',
+				'style' => 'display: none',
+			]);
+		}
 	}
 
 	public function field($model, $attribute, $options = [])

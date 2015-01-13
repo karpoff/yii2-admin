@@ -2,12 +2,14 @@
 namespace yii\admin\fields;
 
 use kartik\select2\Select2;
+use yii\admin\YiiAdminModule;
 use yii\helpers\Html;
 
 class Relation extends ActiveField
 {
 	public $data;
-	public $path;
+	public $controller;
+	public $action = '';
 
 	public function render($content = null)
 	{
@@ -21,13 +23,24 @@ class Relation extends ActiveField
 			$content .= Html::activeLabel($this->model, $this->attribute, $this->labelOptions);
 			$inputID = Html::getInputId($this->model, $this->attribute);
 
-			$path = $this->path;
-			$path .= (strpos($path, '?') !== false ? '&' : '?') . 'attributes[' . $remote_field . ']=' . $this->model->getAttribute($own_field);
 
-			$content .= Html::tag('div', 'loading', ['id' => $inputID, 'class' => 'relation-content', 'data-url' => $path]);
+			if ($this->model->getIsNewRecord()) {
+				$field_content = \Yii::t('yii.admin', 'Will be available after saving');
+			} else {
+				/** @var \yii\web\Controller $controller */
+				$controller = \Yii::createObject(
+					$this->controller ? $this->controller : 'yii\admin\controllers\ModelController',
+					['relation-' . $this->attribute, YiiAdminModule::getInstance(), [
+						'model_class' => $rel->modelClass,
+						'layout' => false,
+						'attributes' => [$remote_field => $this->model->getAttribute($own_field)],
+					], []]
+				);
 
-			$view = $this->form->getView();
-			$view->registerJs("$.yiiAdmin('loadChild', '{$inputID}');");
+				$field_content = $controller->runAction($this->action);
+			}
+
+			$content .= Html::tag('div', $field_content, ['id' => $inputID]);
 		} else {
 			if ($this->data == null) {
 				/* @var $related_model \yii\db\ActiveRecord */

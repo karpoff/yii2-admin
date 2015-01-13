@@ -8,6 +8,7 @@ use yii\admin\widgets\ModelForm;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use yii\di\Instance;
+use yii\helpers\ArrayHelper;
 
 class ModelController extends yii\admin\components\AdminController
 {
@@ -28,6 +29,8 @@ class ModelController extends yii\admin\components\AdminController
 	public $child = false;
 	protected $editPopup = false;
 
+	public $attributes;
+
 	/**
 	 * @inheritdoc
 	 */
@@ -43,10 +46,15 @@ class ModelController extends yii\admin\components\AdminController
 			yii\admin\YiiAdminModule::getInstance()->noBreadcrumbs = true;
 		$this->model = Yii::createObject($this->model_class);
 
-		$attributes = Yii::$app->getRequest()->get('attributes', []);
-		foreach ($attributes as $name => $value) {
-			if ($this->model->hasAttribute($name))
-				$this->model->setAttribute($name, $value);
+		if ($this->attributes) {
+			foreach ($this->attributes as $name => $value) {
+				if ($this->model->hasAttribute($name))
+					$this->model->setAttribute($name, $value);
+			}
+		}
+
+		if (Yii::$app->getRequest()->get('popup') || $this->attributes) {
+			$this->editPopup = true;
 		}
 
 		return true;
@@ -163,14 +171,26 @@ class ModelController extends yii\admin\components\AdminController
 				'icon' => 'remove',
 				'label' => 'Delete',
 				'url' => $this->url('delete', ['id' => '__primary_key__']),
-				'confirm' => 'Delete?'
+				'popup' => true
 			],
 		];
 
+		if ($this->attributes) {
+			$link_params = [
+				'id' => Yii::$app->request->get('id'),
+				'name' => explode('-', $this->id)[1],
+				'relation_params[id]' => '__primary_key__',
+			];
+			$actions['edit']['url'] = $this->url('/' . Yii::$app->controller->id . '/relation',
+				yii\helpers\ArrayHelper::merge($link_params, ['action' => 'edit'])
+			);
+			$actions['delete']['url'] = $this->url('/' . Yii::$app->controller->id . '/relation',
+				yii\helpers\ArrayHelper::merge($link_params, ['action' => 'delete'])
+			);
+		}
+
 		if ($this->editPopup) {
 			$actions['edit']['popup'] = true;
-			$actions['delete']['options'] = ['data-load-only' => 1];
-			$actions['delete']['onclick'] = "var list = $(this).closest('.grid-view'); $.yiiAdmin('loadPage', {loadOnly: true, onContent: function() { $.yiiAdmin('listUpdate', list.attr('id')); }}); return false;";
 		}
 		return $actions;
 	}
@@ -189,6 +209,9 @@ class ModelController extends yii\admin\components\AdminController
 		$model = $this->model;
 		$query = $model::find();
 
+		if ($this->attributes)
+			$query->where($this->attributes);
+
 		$dataProvider = new ActiveDataProvider(['query' => $query]);
 		$dataProvider->setSort(false);
 
@@ -196,19 +219,32 @@ class ModelController extends yii\admin\components\AdminController
 		$data['grid_config'] = ['dataProvider' => $dataProvider];
 
 		$data['grid_config']['id'] = $this->id . '-list';
+		$data['grid_config']['options']['class'] = 'grid-view';
 		$data['grid_config']['columns'] = $this->listFields();
 		$data['grid_config']['columns'][] = [
 			'class' => 'yii\admin\widgets\GridActionColumn',
 			'actions' => $this->listActions()
 		];
 
-		$attributes = Yii::$app->getRequest()->get('attributes');
 		$addOptions = [
-			'href' => $this->url('add', $attributes ? ['attributes' => $attributes] : []),
 			'class' => 'btn btn-primary', 'style' => 'float: right;'
 		];
-		if ($this->editPopup)
-			$addOptions['onclick'] = "$.yiiAdmin('popupForm', $(this).attr('href'), function() { $.yiiAdmin('listUpdate', '{$data['grid_config']['id']}')}); return false;";
+		if ($this->editPopup) {
+			$addOptions['data-popup'] = true;
+			$addOptions['data-list'] = $data['grid_config']['id'];
+		}
+		// means that it is relation of some model
+		if ($this->attributes) {
+			$link_params = [
+				'id' => Yii::$app->request->get('id'),
+				'name' => explode('-', $this->id)[1],
+			];
+			$data['grid_config']['options']['data-url'] = $this->url('/' . Yii::$app->controller->id . '/relation', $link_params);
+			$addOptions['href'] =  $this->url('/' . Yii::$app->controller->id . '/relation', ArrayHelper::merge($link_params, ['action' => 'add']));
+		} else {
+			$addOptions['href'] =  $this->url('add');
+		}
+
 		$data['add'] = \yii\bootstrap\Button::widget([
 			'options' => $addOptions,
 			'tagName' => 'a',
@@ -243,23 +279,37 @@ class ModelController extends yii\admin\components\AdminController
 			$this->model->scenario = $this->model->isNewRecord ? 'insert' : 'update';
 
 		if ($this->model->load(Yii::$app->request->post())) {
-			$_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
 			$this->model->save();
-			return $this->returnEdit();
+
+			if ($this->editPopup) {
+				$_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
+				return $this->model->primaryKey;
+			}
+
+			return $this->redirect($this->url('list'));
 		}
 
 		$config = $this->jsModelFormOptions ? $this->jsModelFormOptions : [];
 
 		$config['model'] = $this->model;
 
-		$attributes = Yii::$app->getRequest()->get('attributes');
-		$validationParams = $this->model->isNewRecord ? [] : ['id' => $this->model->getPrimaryKey()];
-		if ($attributes)
-			$validationParams['attributes'] = $attributes;
-		$config['validationUrl'] = $this->url('validate', $validationParams);
+		if ($this->attributes) {
+			$link_params = [
+				'id' => Yii::$app->request->get('id'),
+				'name' => explode('-', $this->id)[1],
+				'action' => 'validate'
+			];
+
+			if (!$this->model->isNewRecord)
+				$link_params['relation_params']['id'] = $this->model->id;
+			$config['validationUrl'] = $this->url('/' . Yii::$app->controller->id . '/relation', $link_params);
+		} else {
+			$config['validationUrl'] = $this->url('validate', $this->model->isNewRecord ? [] : ['id' => $this->model->getPrimaryKey()]);
+		}
 		$config['defaultClassPath'] = 'yii\admin\fields';
 		$config['fieldClass'] = 'yii\admin\fields\ActiveField';
-		if (Yii::$app->getRequest()->get('popup')) {
+		if ($this->editPopup) {
+			$config['modal'] = true;
 			$config['showSubmitButton'] = false;
 		}
 
@@ -268,6 +318,23 @@ class ModelController extends yii\admin\components\AdminController
 				? '$.yiiAdmin("popupForm", false);'
 				: '$.yiiAdmin("loadPage", "'.$this->url('list').'");';
 		}
+
+		$config = yii\helpers\ArrayHelper::merge($config, $this->getFormFields());
+
+		$actions = $this->editActions();
+		if ($actions) {
+			foreach ($actions as &$action) {
+				$action['url'] = str_replace('__primary_key__', $this->model->primaryKey, $action['url']);
+			}
+			$config['actions'] = $actions;
+		}
+
+		$title = $id ? static::modelTitle($this->model) : 'Add';
+		return $this->render('/model/form', ['config' => $config, 'title' => $title]);
+	}
+
+	protected function getFormFields()
+	{
 		$tabs = $this->editTabs();
 
 		if ($tabs) {
@@ -282,26 +349,52 @@ class ModelController extends yii\admin\components\AdminController
 					$tabs[$name] = $this->processEditFields($fields);
 				}
 			}
-			$config['tabs'] = $tabs;
+			return ['tabs' => $tabs];
 		} else {
 			$fields = $this->editFields();
 			if ($this->processEditFields)
 				$fields = $this->processEditFields($fields);
-			$config['fields'] = $fields;
+			return ['fields' => $fields];
 		}
-
-		$actions = $this->editActions();
-		if ($actions) {
-			foreach ($actions as &$action) {
-				$action['url'] = str_replace('__primary_key__', $this->model->primaryKey, $action['url']);
-			}
-			$config['actions'] = $actions;
-		}
-
-		$title = $id ? static::modelTitle($this->model) : 'Add';
-		return $this->render('/model/form', ['config' => $config, 'title' => $title]);
 	}
+	public function actionRelation($id, $name, $action='')
+	{
+		$this->model = $this->model->findOne($id);
+		$fields = $this->getFormFields();
 
+		if (isset($fields['tabs'])) {
+			foreach ($fields['tabs'] as $fields) {
+				if (isset($fields[$name])) {
+					$field = $fields[$name];
+					break;
+				}
+			}
+		} else {
+			if (isset($fields['fields'][$name]))
+				$field = $fields['fields'][$name];
+		}
+
+		if (!isset($field))
+			throw new \HttpException(404);
+
+		$rel = $this->model->getRelation($name);
+		$remote_field = '';
+		$own_field = '';
+		foreach ($rel->link as $remote_field => $own_field)
+			break;
+
+		/** @var \yii\web\Controller $controller */
+		$controller = \Yii::createObject(
+			isset($field['controller']) ? $field['controller'] : 'yii\admin\controllers\ModelController',
+			['relation-' . $name, yii\admin\YiiAdminModule::getInstance(), [
+				'model_class' => $rel->modelClass,
+				'layout' => 'page',
+				'attributes' => [$remote_field => $this->model->getAttribute($own_field)],
+			], []]
+		);
+
+		return $controller->runAction($action, Yii::$app->request->get('relation_params', []));
+	}
 	public function returnEdit()
 	{
 		return $this->model->primaryKey;
