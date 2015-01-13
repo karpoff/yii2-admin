@@ -150,7 +150,7 @@
 						$('.modal-body form:first', modal).submit();
 					});
 
-					modal.on('hide.bs.modal', function (e) {
+					modal.unbind('hide.bs.modal').on('hide.bs.modal', function (e) {
 						if (settings.onClose)
 							settings.onClose();
 						if (settings.list)

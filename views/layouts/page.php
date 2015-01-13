@@ -16,7 +16,7 @@ $module = YiiAdminModule::getInstance();
 if (empty($this->title))
 	$this->title = $module->getMenuItemTitle();
 
-echo $module->getBreadcrumbs($this->title);
+//echo $module->getBreadcrumbs($this->title);
 echo $content;
 
 $this->endBody();
