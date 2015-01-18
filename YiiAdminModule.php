@@ -16,6 +16,8 @@ class YiiAdminModule extends \yii\base\Module
     public $controllerNamespace = 'yii\admin\controllers';
 	public $layout = 'main';
 
+	public $index_redirect;
+
 	public $lang;
 	public $noBreadcrumbs = false;
 
@@ -108,8 +110,12 @@ class YiiAdminModule extends \yii\base\Module
 		$controller_id = $path[0];
 		$action = isset($path[1]) ? $path[1] : '';
 
-		if (empty($controller_id) || $controller_id == $this->defaultRoute)
+		if (empty($controller_id) || $controller_id == $this->defaultRoute) {
+			if ($this->index_redirect) {
+				Yii::$app->getResponse()->redirect(Url::to($this->id . '/' .$this->index_redirect, true));
+			}
 			return parent::createController($route);
+		}
 
 		if (substr($controller_id, 0, 6) == 'admin-') {
 			$path = substr($controller_id, 6);
