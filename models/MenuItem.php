@@ -164,6 +164,7 @@ class MenuItem extends ActiveRecord {
 				'attribute' => 'title',
 				'scenarios' => ['default'],
 				'model' => MenuItemText::className(),
+				'copyDefault' => ['title']
 			];
 		}
 		return $behaviors;

@@ -24,7 +24,14 @@ class User extends \yii\web\User
 
 	public function getIsGuest()
 	{
-		$qq = 1;
 		return $this->getIdentity() === null;
+	}
+
+	public function getIsAdmin()
+	{
+		$identity = $this->getIdentity();
+		if (isset($identity->admin))
+			return $identity->admin;
+		return false;
 	}
 }

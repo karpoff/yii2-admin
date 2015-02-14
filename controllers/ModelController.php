@@ -40,11 +40,11 @@ class ModelController extends yii\admin\components\AdminController
 			$this->model_class = $this->model;
 		}
 
-		Instance::ensure($this->model_class, Model::className());
-
 		if (Yii::$app->getRequest()->get('popup'))
 			yii\admin\YiiAdminModule::getInstance()->noBreadcrumbs = true;
 		$this->model = Yii::createObject($this->model_class);
+
+		Instance::ensure($this->model, Model::className());
 
 		if ($this->attributes) {
 			foreach ($this->attributes as $name => $value) {
@@ -279,14 +279,14 @@ class ModelController extends yii\admin\components\AdminController
 			$this->model->scenario = $this->model->isNewRecord ? 'insert' : 'update';
 
 		if ($this->model->load(Yii::$app->request->post())) {
-			$this->model->save();
+			if ($this->model->save()) {
+				if ($this->editPopup) {
+					$_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
+					return $this->model->primaryKey;
+				}
 
-			if ($this->editPopup) {
-				$_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
-				return $this->model->primaryKey;
+				return $this->redirect($this->url('list'));
 			}
-
-			return $this->redirect($this->url('list'));
 		}
 
 		$config = $this->jsModelFormOptions ? $this->jsModelFormOptions : [];

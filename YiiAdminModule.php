@@ -31,17 +31,6 @@ class YiiAdminModule extends \yii\base\Module
 
 	public function __construct($id, $parent = null, $config = [])
 	{
-		/*$user = [];
-		$user['class'] = 'yii\admin\components\user\User';
-		switch ($this->user['type'])
-		{
-			case 'simple':
-				$user['identityClass'] = 'yii\admin\components\user\SimpleIdentity';
-				$user['login'] = $this->user['login'];
-				$user['password'] = $this->user['password'];
-				break;
-		}*/
-
 		$config['components']['user']['class'] = 'yii\admin\components\user\User';
 
 		parent::__construct($id, $parent, $config);

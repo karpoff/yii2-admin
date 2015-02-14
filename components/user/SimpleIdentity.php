@@ -1,6 +1,8 @@
 <?php
 
 namespace yii\admin\components\user;
+use yii\admin\YiiAdminModule;
+
 
 class SimpleIdentity extends \yii\base\Object implements \yii\web\IdentityInterface
 {
@@ -9,41 +11,68 @@ class SimpleIdentity extends \yii\base\Object implements \yii\web\IdentityInterf
 	public $password;
 	public $authKey;
 	public $accessToken;
+	public $admin = false;
 
 	public static function findIdentity($id)
 	{
-		return $id == 1 ? new static(self::user()) : null;
+		foreach (self::users() as $user) {
+			if ($user['id'] == $id)
+				return new static($user);
+		}
+		return null;
 	}
 
 	public static function findIdentityByAccessToken($token, $type = null)
 	{
-		$user = self::user();
-		if ($user['accessToken'] === $token) {
-			return new static($user);
+		foreach (self::users() as $user) {
+			if ($user['accessToken'] == $token)
+				return new static($user);
 		}
-
 		return null;
 	}
 
 	public static function findByUsername($username)
 	{
-		$user = self::user();
-		if (strcasecmp($user['username'], $username) === 0) {
-			return new static($user);
+		foreach (self::users() as $user) {
+			if (strcasecmp($user['username'], $username) === 0)
+				return new static($user);
 		}
-
 		return null;
 	}
 
-	protected static function user()
+	protected static function users()
 	{
-		return [
-			'id' => 1,
-			'username' => \Yii::$app->controller->module->user->params['login'],
-			'password' => \Yii::$app->controller->module->user->params['password'],
-			'authKey' => 'access_key',
-			'accessToken' => 'access-token',
-		];
+		/** @var YiiAdminModule $module */
+		$module = YiiAdminModule::getInstance();
+		$params = $module->user->params;
+
+		if (isset($params['login']) && isset($params['password'])) {
+			return [[
+				'id' => 1,
+				'username' => $params['login'],
+				'password' => $params['password'],
+				'authKey' => 'access_key_admin',
+				'accessToken' => 'access-token-admin',
+				'admin' => true,
+			]];
+		} else if (isset($params[0]) && isset($params[1]) && is_array($params[0]) && is_array($params[1])) {
+			return [[
+				'id' => 1,
+				'username' => $params[0]['login'],
+				'password' => $params[0]['password'],
+				'authKey' => 'access_key_admin',
+				'accessToken' => 'access-token-admin',
+				'admin' => true,
+			], [
+				'id' => 2,
+				'username' => $params[1]['login'],
+				'password' => $params[1]['password'],
+				'authKey' => 'access_key',
+				'accessToken' => 'access-token',
+				'admin' => false,
+			]];
+		}
+		return [];
 	}
 	public function getId()
 	{

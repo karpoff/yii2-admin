@@ -83,14 +83,13 @@ if ($languages) {
 	$right_menu[] = $l;
 }
 
-if (true) {
+if ($module->user->isAdmin) {
 	$right_menu[] = [
 		'label' => '',
 		'linkOptions' => ['class' => 'glyphicon glyphicon-plus'],
 		'items' => [
 			['label' => Yii::t('yii.admin', 'Menu'), 'url' => $url . '/admin-menu'],
 			['label' => Yii::t('yii.admin', 'Languages'), 'url' => $url . '/admin-lang'],
-			//['label' => 'Пользователи', 'url' => $url . '/admin-users'],
 		]
 	];
 }

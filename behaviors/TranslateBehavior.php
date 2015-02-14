@@ -42,6 +42,7 @@ class TranslateBehavior extends Behavior
 	public $relation_lang = 'lang';
 	public $relation_model = null;
 	public $model;
+	public $copyDefault = [];
 
 	protected $_models = [];
 
@@ -115,8 +116,17 @@ class TranslateBehavior extends Behavior
 		}
 
 
+		$default = null;
 		foreach ($model->{$this->attribute} as $lang_id => $tran) {
 			$trans = null;
+			if (!$default) {
+				$default = $tran;
+			} else {
+				foreach ($this->copyDefault as $attr) {
+					if (empty($tran[$attr]))
+						$tran[$attr] = $default[$attr];
+				}
+			}
 			foreach ($this->_models as $trans_m) {
 				if ($trans_m->getAttribute($tran_lang_field) == $lang_id) {
 					$trans = $trans_m;
