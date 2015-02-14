@@ -8,9 +8,9 @@ use yii\web\View;
 
 class AdminAsset extends AssetBundle
 {
-    //public $sourcePath = '@vendor/karpoff/yii2-admin/assets';
-    public $baseUrl = '@web/adm';
-    public $basePath = '@webroot/adm';
+    public $sourcePath = '@vendor/karpoff/yii2-admin/assets';
+    //public $baseUrl = '@web/adm';
+    //public $basePath = '@webroot/adm';
 
 	public $jsOptions = ['position' => View::POS_HEAD];
     public $css = [
