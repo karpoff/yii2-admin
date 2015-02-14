@@ -48,6 +48,8 @@ class Translation extends ActiveField
 		if ($controller->processEditFields)
 			$fields = $controller->processEditFields($fields);
 
+		$default = null;
+
 		/* @var $lang \yii\admin\models\Lang */
 		foreach (YiiAdminModule::getInstance()->getLanguages() as $lang) {
 
@@ -61,6 +63,26 @@ class Translation extends ActiveField
 				$tran->setAttribute($tran_lng_field, $lang->getPrimaryKey());
 			} else {
 				$tran = $trans[$lang->getPrimaryKey()];
+			}
+
+			if (!$default) {
+				$default = $tran;
+			} else {
+				if (is_array($behavior->copyDefault)) {
+					foreach ($behavior->copyDefault as $attr) {
+						if ($tran[$attr] == $default[$attr])
+							$tran[$attr] = '';
+					}
+				} else if ($behavior->copyDefault === true) {
+					$fbd = $model->getPrimaryKey(true);
+					$fbd[] = $tran_mdl_field;
+					$fbd[] = $tran_lng_field;
+					foreach ($tran as $attr => $val) {
+						if (array_search($attr, $fbd) === false && $tran[$attr] == $default[$attr]) {
+							$tran[$attr] = '';
+						}
+					}
+				}
 			}
 
 			foreach ($fields as $name => $value) {

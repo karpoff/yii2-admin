@@ -122,9 +122,20 @@ class TranslateBehavior extends Behavior
 			if (!$default) {
 				$default = $tran;
 			} else {
-				foreach ($this->copyDefault as $attr) {
-					if (empty($tran[$attr]))
-						$tran[$attr] = $default[$attr];
+				if (is_array($this->copyDefault)) {
+					foreach ($this->copyDefault as $attr) {
+						if (empty($tran[$attr]))
+							$tran[$attr] = $default[$attr];
+					}
+				} else if ($this->copyDefault === true) {
+					$fbd = $model->getPrimaryKey(true);
+					$fbd[] = $tran_model_field;
+					$fbd[] = $tran_lang_field;
+					foreach ($tran as $attr => $val) {
+						if (array_search($attr, $fbd) === false && empty($tran[$attr])) {
+							$tran[$attr] = $default[$attr];
+						}
+					}
 				}
 			}
 			foreach ($this->_models as $trans_m) {
