@@ -11,6 +11,7 @@ class Translation extends ActiveField
 {
 	public $fields;
 	public $controller;
+	public $controller_params = [];
 
 	public function render($content = null)
 	{
@@ -40,7 +41,7 @@ class Translation extends ActiveField
 
 		/* @var \yii\admin\controllers\ModelController $action */
 		if ($this->controller)
-			$controller = \Yii::createObject($this->controller, ['translation', \Yii::$app->controller->module]);
+			$controller = \Yii::createObject($this->controller, ['translation', \Yii::$app->controller->module, $this->controller_params, []]);
 		else
 			$controller = \Yii::createObject('yii\admin\controllers\ModelController', ['translation', \Yii::$app->controller->module, ['model_class' => $trans_model, 'child' => true], []]);
 
