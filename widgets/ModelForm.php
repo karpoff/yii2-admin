@@ -63,7 +63,7 @@ class ModelForm extends ActiveForm
 			]);
 		}
 		if ($this->showSubmitButton) {
-			echo Html::submitButton($this->model->isNewRecord ? 'Add' : 'Save', ['class' => 'btn btn-default', 'style' => 'float: right;margin-top:5px;margin-right: 20px;']);
+			echo Html::submitButton($this->model->getIsNewRecord() ? 'Add' : 'Save', ['class' => 'btn btn-default', 'style' => 'float: right;margin-top:5px;margin-right: 20px;']);
 			echo Html::tag('div', '', ['style' => 'clear:both;']);
 		}
 	}

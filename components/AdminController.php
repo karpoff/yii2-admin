@@ -59,8 +59,14 @@ class AdminController extends yii\web\Controller
 	{
 		$url = '/' . $this->module->id;
 		//relative path
-		if (empty($route) || $route[0] !== '/')
-			$url .= '/' . $this->id . '/';
+		if (empty($route) || $route[0] !== '/') {
+			$url .= '/' . $this->id;
+			if ($route == $this->defaultAction) {
+				$route = '';
+			} else {
+				$url .= '/';
+			}
+		}
 
 		$url .= $route;
 

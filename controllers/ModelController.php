@@ -62,6 +62,9 @@ class ModelController extends yii\admin\components\AdminController
 
 	public $processEditFields = true;
 	public function editFields() {
+		if ($this->fields)
+			return $this->fields;
+
 		$fields = $this->model->attributes();
 		foreach ($this->model->getBehaviors() as $beh) {
 			if ($beh instanceof TranslateBehavior) {
@@ -89,7 +92,9 @@ class ModelController extends yii\admin\components\AdminController
 		return $out;
 	}
 
-	public function editTabs() { return null; }
+	public function editTabs() {
+		return ($this->tabs) ? $this->tabs : null;
+	}
 
 	public function processEditFields($fields) {
 
@@ -288,7 +293,6 @@ class ModelController extends yii\admin\components\AdminController
 				return $this->redirect($this->url('list'));
 			}
 		}
-
 		$config = $this->jsModelFormOptions ? $this->jsModelFormOptions : [];
 
 		$config['model'] = $this->model;
@@ -304,7 +308,7 @@ class ModelController extends yii\admin\components\AdminController
 				$link_params['relation_params']['id'] = $this->model->id;
 			$config['validationUrl'] = $this->url('/' . Yii::$app->controller->id . '/relation', $link_params);
 		} else {
-			$config['validationUrl'] = $this->url('validate', $this->model->isNewRecord ? [] : ['id' => $this->model->getPrimaryKey()]);
+			$config['validationUrl'] = $this->url('validate', $this->model->getIsNewRecord() ? [] : ['id' => $this->model->getPrimaryKey()]);
 		}
 		$config['defaultClassPath'] = 'yii\admin\fields';
 		$config['fieldClass'] = 'yii\admin\fields\ActiveField';
@@ -329,11 +333,11 @@ class ModelController extends yii\admin\components\AdminController
 			$config['actions'] = $actions;
 		}
 
-		$title = $id ? static::modelTitle($this->model) : 'Add';
+		$title = $this->model->getIsNewRecord() ? 'Add' : static::modelTitle($this->model);
 		return $this->render('/model/form', ['config' => $config, 'title' => $title]);
 	}
 
-	protected function getFormFields()
+	public function getFormFields()
 	{
 		$tabs = $this->editTabs();
 

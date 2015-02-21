@@ -30,7 +30,7 @@ class MenuItem extends ActiveRecord {
 			[['type', 'class'], 'default'],
 			[['hidden'], 'boolean'],
 			['class', 'validate_class'],
-			['path', 'unique'],
+			['path', 'validate_path'],
 			['path', 'compare', 'compareValue' => 'admin', 'operator' => '!='],
 			['path', 'compare', 'compareValue' => 'user', 'operator' => '!='],
 		];
@@ -49,7 +49,7 @@ class MenuItem extends ActiveRecord {
 			self::TYPE_MODEL => Model::className(),
 		];
 
-		$error = true;
+		$error = '';
 		foreach ($types as $type => $class) {
 			try {
 				if (is_array($class)) {
@@ -65,11 +65,30 @@ class MenuItem extends ActiveRecord {
 				$this->setAttribute('type', $type);
 				$error = false;
 				break;
-			} catch (\Exception $e) {}
+			} catch (\Exception $e) {
+				$error .= $e->getMessage() . ' ';
+			}
 		}
 
 		if ($error) {
-			$this->addError($attribute, 'class not supported for menu');
+			$this->addError($attribute, "class not supported for menu ({$error})");
+		}
+	}
+
+	function validate_path($attribute, $param) {
+		if (empty($this->{$attribute}) || !$this->isAttributeChanged($attribute))
+			return;
+
+		$parent = $this->getAttribute('parent');
+		$check = self::find()
+			->where($parent ? ['parent' => $parent] : 'parent IS NULL')
+			->andWhere(['path' => $this->{$attribute}])->one();
+
+		if ($check) {
+			$params = [];
+			$params['attribute'] = $this->getAttributeLabel($attribute);
+			$params['value'] = $this->{$attribute};
+			$this->addError($attribute, \Yii::$app->getI18n()->format(\Yii::t('yii', '{attribute} "{value}" has already been taken.'), $params, \Yii::$app->language));
 		}
 	}
 

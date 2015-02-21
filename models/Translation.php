@@ -4,6 +4,7 @@ namespace yii\admin\models;
 use yii\admin\behaviors\TranslateBehavior;
 use yii\base\InvalidConfigException;
 use yii\db\ActiveRecord;
+use yii\helpers\ArrayHelper;
 use yii\web\HttpException;
 
 abstract class Translation extends ActiveRecord {
@@ -29,7 +30,7 @@ abstract class Translation extends ActiveRecord {
 		if (is_array($relations[0])) {
 			return $relations;
 		}
-		$lang_model = \Yii::$app->controller->module->lang;
+		$lang_model = ArrayHelper::getValue(\Yii::$app->params, 'lang_model', 'yii\admin\models\Lang');
 		return [$relations, [$lang_model::className(), 'lang_id', 'id']];
 	}
 

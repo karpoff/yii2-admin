@@ -2,17 +2,12 @@
 namespace yii\admin\behaviors;
 
 use Yii;
-use yii\admin\models\Lang;
 use yii\admin\YiiAdminModule;
 use yii\base\Behavior;
 use yii\base\InvalidConfigException;
-use yii\base\InvalidParamException;
 use yii\db\BaseActiveRecord;
-use yii\helpers\ArrayHelper;
-use yii\helpers\FileHelper;
 use yii\helpers\Html;
-use yii\web\HttpException;
-use yii\web\UploadedFile;
+
 /**
  * TranslateBehavior automatically saves translation models.
  *
@@ -42,16 +37,12 @@ class TranslateBehavior extends Behavior
 	public $relation_lang = 'lang';
 	public $relation_model = null;
 	public $model;
+	public $models;
 	public $copyDefault = [];
 
 	protected $_models = [];
+	public $settings = [];
 
-	public function init()
-	{
-		/*if (empty($this->relation_model)) {
-			$this->relation_model = $this->owner::c
-		}*/
-	}
 	/**
 	 * @inheritdoc
 	 */
@@ -75,32 +66,43 @@ class TranslateBehavior extends Behavior
 		/** @var BaseActiveRecord $model */
 		$model = $this->owner;
 
-		if (!in_array($model->scenario, $this->scenarios))
+		if (!in_array($model->getScenario(), $this->scenarios))
 			return;
 
 		/** @var \yii\admin\models\Translation $tran_model */
 		$tran_model = $this->model;
 
-		$tran_lang_field = $tran_model::getRelationField(false);
-		$lang_tran_field = $tran_model::getRelationField(false, true);
-		$tran_model_field = $tran_model::getRelationField(true);
-		$model_tran_field = $tran_model::getRelationField(true, true);
+		if (!$this->settings) {
+			$this->settings['tran_lang_field'] = $tran_model::getRelationField(false);
+			$this->settings['lang_tran_field'] = $tran_model::getRelationField(false, true);
+			$this->settings['tran_model_field'] = $tran_model::getRelationField(true);
+			$this->settings['model_tran_field'] = $tran_model::getRelationField(true, true);
+		}
 
 		$languages = YiiAdminModule::getInstance()->getLanguages();
 		$language_ids = [];
 
 		/* @var $lang \yii\admin\models\Lang */
 		foreach ($languages as $lang) {
-			$language_ids[] = $lang->getAttribute($lang_tran_field);
+			$language_ids[] = $lang->getAttribute($this->settings['lang_tran_field']);
 		}
 
-		$this->_models = $tran_model::find()->where([$tran_model_field => $model->getAttribute($model_tran_field), $tran_lang_field => $language_ids])->all();
+		if ($this->models) {
+			$f = $this->models;
+			$this->_models = $f();
+		} else {
+			$query = $tran_model::find()->where([$this->settings['tran_lang_field'] => $language_ids]);
+			if (isset($this->settings['tran_model_field']))
+				$query->andWhere([$this->settings['tran_model_field'] => $model->getAttribute($this->settings['model_tran_field'])]);
+
+			$this->_models = $query->all();
+		}
 
 		//create new translations if needed
 		foreach ($language_ids as $lang_id) {
 			$found = false;
 			foreach ($this->_models as $trans) {
-				if ($trans->getAttribute($tran_lang_field) == $lang_id) {
+				if ($trans->getAttribute($this->settings['tran_lang_field']) == $lang_id) {
 					$found = true;
 					break;
 				}
@@ -109,8 +111,9 @@ class TranslateBehavior extends Behavior
 			if (!$found) {
 				/** @var \yii\admin\models\Translation $trans */
 				$trans = new $this->model();
-				$trans->setAttribute($tran_lang_field, $lang_id);
-				$trans->setAttribute($tran_model_field, $model->getIsNewRecord() ? 0 : $model->getAttribute($model_tran_field));
+				$trans->setAttribute($this->settings['tran_lang_field'], $lang_id);
+				if (isset($this->settings['tran_model_field']))
+					$trans->setAttribute($this->settings['tran_model_field'], $model->getIsNewRecord() ? 0 : $model->getAttribute($this->settings['model_tran_field']));
 				$this->_models[] = $trans;
 			}
 		}
@@ -129,8 +132,9 @@ class TranslateBehavior extends Behavior
 					}
 				} else if ($this->copyDefault === true) {
 					$fbd = $model->getPrimaryKey(true);
-					$fbd[] = $tran_model_field;
-					$fbd[] = $tran_lang_field;
+					if (isset($this->settings['tran_model_field']))
+						$fbd[] = $this->settings['tran_model_field'];
+					$fbd[] = $this->settings['tran_lang_field'];
 					foreach ($tran as $attr => $val) {
 						if (array_search($attr, $fbd) === false && empty($tran[$attr])) {
 							$tran[$attr] = $default[$attr];
@@ -139,14 +143,14 @@ class TranslateBehavior extends Behavior
 				}
 			}
 			foreach ($this->_models as $trans_m) {
-				if ($trans_m->getAttribute($tran_lang_field) == $lang_id) {
+				if ($trans_m->getAttribute($this->settings['tran_lang_field']) == $lang_id) {
 					$trans = $trans_m;
 					break;
 				}
 			}
 
 			if (!$trans)
-				throw new HttpException(500, 'translation model is not existed/created');
+				throw new InvalidConfigException(500, 'translation model is not existed/created');
 
 			$trans->load($tran, '');
 			$trans->validate();
@@ -168,13 +172,13 @@ class TranslateBehavior extends Behavior
 		/** @var BaseActiveRecord $model */
 		$model = $this->owner;
 
-		if (!in_array($model->scenario, $this->scenarios))
+		if (!in_array($model->getScenario(), $this->scenarios))
 			return;
 
 		/** @var \yii\admin\models\Translation $trans */
 		foreach ($this->_models as $trans) {
-			if ($trans->getAttribute($trans->getRelationField()) == 0) {
-				$trans->setAttribute($trans->getRelationField(), $model->getAttribute($trans->getRelationField(true, true)));
+			if (isset($this->settings['tran_model_field']) && $trans->getAttribute($this->settings['tran_model_field']) == 0) {
+				$trans->setAttribute($this->settings['tran_model_field'], $model->getAttribute($this->settings['model_tran_field']));
 			}
 			$trans->save();
 		}
@@ -188,7 +192,7 @@ class TranslateBehavior extends Behavior
 		/** @var BaseActiveRecord $model */
 		$model = $this->owner;
 
-		if (!in_array($model->scenario, $this->scenarios))
+		if (!in_array($model->getScenario(), $this->scenarios))
 			return;
 
 		if ($model->hasAttribute($this->attribute)) {

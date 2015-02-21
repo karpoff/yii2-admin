@@ -99,11 +99,15 @@ class YiiAdminModule extends \yii\base\Module
 		$controller_id = $path[0];
 		$action = isset($path[1]) ? $path[1] : '';
 
-		if (empty($controller_id) || $controller_id == $this->defaultRoute) {
+		if (empty($controller_id)) {
 			if ($this->index_redirect) {
 				Yii::$app->getResponse()->redirect(Url::to($this->id . '/' .$this->index_redirect, true));
 			}
-			return parent::createController($route);
+			if ($this->defaultRoute != 'default') {
+				$controller_id = $this->defaultRoute;
+			} else {
+				return parent::createController($route);
+			}
 		}
 
 		if (substr($controller_id, 0, 6) == 'admin-') {

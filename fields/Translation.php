@@ -12,6 +12,7 @@ class Translation extends ActiveField
 	public $fields;
 	public $controller;
 	public $controller_params = [];
+	public $models;
 
 	public function render($content = null)
 	{
@@ -33,17 +34,21 @@ class Translation extends ActiveField
 		/* @var $trans_model \yii\admin\models\Translation */
 		$trans_model = $behavior->model;
 
-		$tran_lng_field = $trans_model::getRelationField(false);
-		$tran_mdl_field = $trans_model::getRelationField();
-		$model_tran_field = $trans_model::getRelationField(true, true);
+		if (!$this->models) {
+			$tran_lng_field = $trans_model::getRelationField(false);
+			$tran_mdl_field = $trans_model::getRelationField();
+			$model_tran_field = $trans_model::getRelationField(true, true);
 
-		$trans = ArrayHelper::index($trans_model::find()->where([$tran_mdl_field => $model->getAttribute($model_tran_field)])->all(), $tran_lng_field);
+			$trans = ArrayHelper::index($trans_model::find()->where([$tran_mdl_field => $model->getAttribute($model_tran_field)])->all(), $tran_lng_field);
+		} else {
+			$trans = $this->models;
+		}
 
 		/* @var \yii\admin\controllers\ModelController $action */
 		if ($this->controller)
 			$controller = \Yii::createObject($this->controller, ['translation', \Yii::$app->controller->module, $this->controller_params, []]);
 		else
-			$controller = \Yii::createObject('yii\admin\controllers\ModelController', ['translation', \Yii::$app->controller->module, ['model_class' => $trans_model, 'child' => true], []]);
+			$controller = \Yii::createObject('yii\admin\controllers\ModelController', ['translation', \Yii::$app->controller->module, ArrayHelper::merge(['model_class' => $trans_model, 'child' => true], $this->controller_params), []]);
 
 		$fields = $controller->editFields();
 		if ($controller->processEditFields)
@@ -75,12 +80,14 @@ class Translation extends ActiveField
 							$tran[$attr] = '';
 					}
 				} else if ($behavior->copyDefault === true) {
-					$fbd = $model->getPrimaryKey(true);
-					$fbd[] = $tran_mdl_field;
-					$fbd[] = $tran_lng_field;
-					foreach ($tran as $attr => $val) {
+					$fbd = $tran->getPrimaryKey(true);
+					if (isset($tran_mdl_field))
+						$fbd[] = $tran_mdl_field;
+					if (isset($tran_lng_field))
+						$fbd[] = $tran_lng_field;
+					foreach ($fields as $attr => $val) {
 						if (array_search($attr, $fbd) === false && $tran[$attr] == $default[$attr]) {
-							$tran[$attr] = '';
+							$tran->setAttribute($attr, '');
 						}
 					}
 				}
