@@ -51,7 +51,7 @@ class Translation extends ActiveField
 			$controller = \Yii::createObject('yii\admin\controllers\ModelController', ['translation', \Yii::$app->controller->module, ArrayHelper::merge(['model_class' => $trans_model, 'child' => true], $this->controller_params), []]);
 
 		$fs = $controller->getFormFields();
-		$field_tabs = isset($fs['tabs']) ? $fs['tabs'] : $fs['fields'];
+		$field_tabs = isset($fs['tabs']) ? $fs['tabs'] : [$fs['fields']];
 
 		$default = null;
 
