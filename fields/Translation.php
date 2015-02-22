@@ -50,9 +50,8 @@ class Translation extends ActiveField
 		else
 			$controller = \Yii::createObject('yii\admin\controllers\ModelController', ['translation', \Yii::$app->controller->module, ArrayHelper::merge(['model_class' => $trans_model, 'child' => true], $this->controller_params), []]);
 
-		$fields = $controller->editFields();
-		if ($controller->processEditFields)
-			$fields = $controller->processEditFields($fields);
+		$fs = $controller->getFormFields();
+		$field_tabs = isset($fs['tabs']) ? $fs['tabs'] : $fs['fields'];
 
 		$default = null;
 
@@ -85,20 +84,35 @@ class Translation extends ActiveField
 						$fbd[] = $tran_mdl_field;
 					if (isset($tran_lng_field))
 						$fbd[] = $tran_lng_field;
-					foreach ($fields as $attr => $val) {
-						if (array_search($attr, $fbd) === false && $tran[$attr] == $default[$attr]) {
-							$tran->setAttribute($attr, '');
+					foreach ($field_tabs as $fields) {
+						foreach ($fields as $attr => $val) {
+							if (array_search($attr, $fbd) === false && $tran[$attr] == $default[$attr]) {
+								$tran->setAttribute($attr, '');
+							}
 						}
 					}
 				}
 			}
 
-			foreach ($fields as $name => $value) {
-				$content .= (string) (is_numeric($name)
-					? $this->form->field($tran, $value)
-					: $this->form->field($tran, $name, $value)
-				);
+			$out_tabs = [];
+			foreach ($field_tabs as $tab_name => $fields) {
+				$tab = ['label' => $tab_name, 'content' => ''];
+				foreach ($fields as $name => $value) {
+					$tab['content'] .= (string)(is_numeric($name)
+						? $this->form->field($tran, $value)
+						: $this->form->field($tran, $name, $value)
+					);
+				}
+				$out_tabs[] = $tab;
 			}
+			switch (sizeof($out_tabs)) {
+				case 1:
+					$content = $out_tabs[0]['content'];
+					break;
+				default:
+					$content = (string) Tabs::widget(['items' => $out_tabs]);
+			}
+
 			$tabs[] = ['label' => $lang->getAttribute('code'), 'content' => $content];
 		}
 
