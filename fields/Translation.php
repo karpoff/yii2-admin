@@ -85,7 +85,8 @@ class Translation extends ActiveField
 					if (isset($tran_lng_field))
 						$fbd[] = $tran_lng_field;
 					foreach ($field_tabs as $fields) {
-						foreach ($fields as $attr => $val) {
+						foreach ($fields as $name => $val) {
+							$attr = is_numeric($name) ? $val : $name;
 							if (array_search($attr, $fbd) === false && $tran[$attr] == $default[$attr]) {
 								$tran->setAttribute($attr, '');
 							}
