@@ -30,6 +30,7 @@ class ModelController extends yii\admin\components\AdminController
 	protected $editPopup = false;
 
 	public $attributes;
+	public $canAddRecord = true;
 
 	/**
 	 * @inheritdoc
@@ -206,6 +207,8 @@ class ModelController extends yii\admin\components\AdminController
 			return [];
 		$actions = $this->listActions();
 		unset($actions['edit']);
+		if ($this->model->getIsNewRecord())
+			unset($actions['delete']);
 		return $actions;
 	}
 
@@ -250,12 +253,13 @@ class ModelController extends yii\admin\components\AdminController
 			$addOptions['href'] =  $this->url('add');
 		}
 
-		$data['add'] = \yii\bootstrap\Button::widget([
-			'options' => $addOptions,
-			'tagName' => 'a',
-			'label' => 'Add'
-		]);
-
+		if ($this->canAddRecord) {
+			$data['add'] = \yii\bootstrap\Button::widget([
+				'options' => $addOptions,
+				'tagName' => 'a',
+				'label' => 'Add'
+			]);
+		}
 
 		return $this->render('/model/list', $data);
 	}
@@ -273,6 +277,9 @@ class ModelController extends yii\admin\components\AdminController
 	}
 
 	public function actionAdd()	{
+		if (!$this->canAddRecord) {
+			throw new yii\web\HttpException(404);
+		}
 		return $this->actionEdit(null);
 	}
 	public function actionEdit($id)

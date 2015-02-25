@@ -7,7 +7,9 @@ echo \yii\helpers\Html::tag('div', '', ['class' => 'clear']);
 echo GridView::widget(array_merge(['id' => 'list-grid'], $grid_config));
 \yii\widgets\Pjax::end();*/
 
-echo $add;
+if (!empty($add))
+	echo $add;
+
 echo \yii\helpers\Html::tag('div', '', ['class' => 'clear']);
 
 //\yii\widgets\Pjax::begin(['options' => ['id' => $grid_config['id'] . '-pjax', 'class' => 'pjax-grid'], 'clientOptions' => ['push' => false, 'replace' => false, 'history' => false]]);

@@ -118,7 +118,9 @@ class TranslateBehavior extends Behavior
 			}
 		}
 
-
+		if (!is_array($model->{$this->attribute})) {
+			return;
+		}
 		$default = null;
 		foreach ($model->{$this->attribute} as $lang_id => $tran) {
 			$trans = null;
