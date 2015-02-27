@@ -10,6 +10,7 @@ abstract class FakeModel extends \yii\db\ActiveRecord
 	protected $_items;
 	protected $model_attributes = [];
 	private $_model_attributes = [];
+	private $_related = [];
 
 	public function getIsNewRecord() { return false; }
 	public function getPrimaryKey($asArray=false) { return $asArray ? [] : ''; }
@@ -18,7 +19,18 @@ abstract class FakeModel extends \yii\db\ActiveRecord
 	protected abstract function addAttribute($name);
 
 	public function __get($name) {
-		return $this->getAttribute($name);
+		$out = $this->getAttribute($name);
+
+		if ($out === null) {
+			if (isset($this->_related[$name]) || array_key_exists($name, $this->_related)) {
+				return $this->_related[$name];
+			}
+			$relation = $this->getRelation($name, false);
+			if ($relation) {
+				return $this->_related[$name] = $relation->findFor($name, $this);
+			}
+		}
+		return $out;
 	}
 	public function hasAttribute($name) {
 		if (!$this->_items) {
