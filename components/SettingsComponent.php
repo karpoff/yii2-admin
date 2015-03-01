@@ -2,6 +2,7 @@
 
 namespace yii\admin\components;
 
+use yii;
 use yii\admin\models\Lang;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
@@ -10,10 +11,12 @@ class SettingsComponent extends Component {
 	/** @var  \yii\admin\models\Settings */
 	public $settings_model;
 
+	/** @var bool */
+	public $cache = true;
+	public $cache_time = 3600;
+
 	/** @var \yii\admin\models\Settings */
 	protected $_settings_model;
-	/** @var \yii\admin\models\SettingsTranslation */
-	protected $_settings_trans_model;
 
 	private $_items;
 
@@ -21,24 +24,38 @@ class SettingsComponent extends Component {
 		if (!$this->settings_model)
 			throw new InvalidConfigException('configure settings model');
 
-		$this->_items = [];
-		$settings = $this->settings_model;
 
-		$this->_settings_model = new $settings();
+		if ($this->cache) {
+			$cached = Yii::$app->cache->get($this->getCacheKey());
 
-		/** @var \yii\admin\models\SettingsItem $item */
-		foreach ($this->_settings_model->findItems() as $item) {
-			$this->_items[$item->getAttribute('name')] = $item->getAttribute('value');
+			if ($cached)
+				$this->_items = $cached;
 		}
-		/** @var \yii\admin\models\SettingsTranslation $trans */
-		$trans = $this->_settings_model->getTrans();
-		if ($trans) {
-			$trans = $trans->modelClass;
-			$this->_settings_trans_model = new $trans();
-			$this->_settings_trans_model->setAttribute('lang_id', Lang::getCurrentId());
-			/** @var \yii\admin\models\SettingsTranslationItem $item */
-			foreach ($this->_settings_trans_model->findItems() as $item) {
+
+
+		if (!$this->_items) {
+			$this->_items = [];
+
+			$settings = $this->getSettingsModel();
+
+			/** @var \yii\admin\models\SettingsItem $item */
+			foreach ($settings->findItems() as $item) {
 				$this->_items[$item->getAttribute('name')] = $item->getAttribute('value');
+			}
+			/** @var \yii\admin\models\SettingsTranslation $trans */
+			$trans = $settings->getTrans();
+			if ($trans) {
+				$trans = $trans->modelClass;
+				$trans = new $trans();
+				$trans->setAttribute('lang_id', Lang::getCurrentId());
+				/** @var \yii\admin\models\SettingsTranslationItem $item */
+				foreach ($trans->findItems() as $item) {
+					$this->_items[$item->getAttribute('name')] = $item->getAttribute('value');
+				}
+			}
+
+			if ($this->cache) {
+				Yii::$app->cache->set($this->getCacheKey(), $this->_items, $this->cache_time);
 			}
 		}
 	}
@@ -48,6 +65,33 @@ class SettingsComponent extends Component {
 	}
 
 	public function getRelated($name) {
-		return $this->_settings_model->$name;
+		return $this->getSettingsModel()->$name;
+	}
+
+	public function clearCache() {
+		Yii::$app->cache->delete($this->getCacheKey());
+	}
+
+	/**
+	 * Returns settings model object.
+	 * @return \yii\admin\models\Settings
+	 */
+	protected function getSettingsModel() {
+		if (!$this->_settings_model) {
+			$settings = $this->settings_model;
+			$this->_settings_model = new $settings();
+		}
+		return $this->_settings_model;
+	}
+	/**
+	 * Returns the cache key for settings.
+	 * @return mixed the cache key
+	 */
+	protected function getCacheKey()
+	{
+		return [
+			__CLASS__,
+			$this->settings_model,
+		];
 	}
 }

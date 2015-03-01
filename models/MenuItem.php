@@ -188,4 +188,12 @@ class MenuItem extends ActiveRecord {
 		}
 		return $behaviors;
 	}
+
+	public static function getMenu() {
+		$query = static::find()->where(['hidden' => 0]);
+		if (YiiAdminModule::getInstance()->lang) {
+			$query->with('trans');
+		}
+		return $query->all();
+	}
 }

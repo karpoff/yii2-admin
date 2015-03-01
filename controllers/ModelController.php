@@ -292,6 +292,7 @@ class ModelController extends yii\admin\components\AdminController
 
 		if ($this->model->load(Yii::$app->request->post())) {
 			if ($this->model->save()) {
+				$this->afterSave();
 				if ($this->editPopup) {
 					$_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
 					return $this->model->primaryKey;
@@ -414,10 +415,14 @@ class ModelController extends yii\admin\components\AdminController
 	public function actionDelete($id)
 	{
 		$this->model->findOne($id)->delete();
+		$this->afterDelete();
 
 		if ($this->editPopup)
 			return '<script>$.yiiAdmin("popupForm", false);</script>';
 		else
 			return $this->redirect($this->url('list'));
 	}
+
+	public function afterSave() {}
+	public function afterDelete() {}
 }

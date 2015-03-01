@@ -150,7 +150,7 @@ class YiiAdminModule extends \yii\base\Module
 
 	public function getMenu()
 	{
-		$items = MenuItem::findAll(['hidden' => 0]);
+		$items = MenuItem::getMenu();
 		$tree = [];
 		$direct_link = [0 => ['items' => &$tree]];
 

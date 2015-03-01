@@ -3,7 +3,6 @@
 namespace yii\admin\controllers;
 
 use Yii;
-use yii\admin\models\SettingsTranslation;
 use yii\admin\YiiAdminModule;
 use yii\base\InvalidConfigException;
 
@@ -97,5 +96,9 @@ class SettingsController extends ModelController
 		}
 
 		return $fields;
+	}
+
+	public function afterSave() {
+		Yii::$app->{$this->settings_component}->clearCache();
 	}
 }
