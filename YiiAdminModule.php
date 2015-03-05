@@ -8,6 +8,7 @@ use yii\base\ErrorException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\Controller;
+use yii\web\ErrorHandler;
 use yii\web\HttpException;
 use yii\widgets\Breadcrumbs;
 
@@ -47,6 +48,10 @@ class YiiAdminModule extends \yii\base\Module
 			'sourceLanguage' => 'en-US',
 			'basePath' => __DIR__ . DIRECTORY_SEPARATOR . 'messages',
         ];
+
+		$handler = new ErrorHandler();
+		\Yii::$app->set('errorHandler', $handler);
+		$handler->register();
 	}
 
 	public function createController($route)
