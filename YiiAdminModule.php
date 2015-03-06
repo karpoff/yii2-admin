@@ -50,6 +50,7 @@ class YiiAdminModule extends \yii\base\Module
         ];
 
 		$handler = new ErrorHandler();
+		$handler->errorView = '@yii/views/errorHandler/exception.php';
 		\Yii::$app->set('errorHandler', $handler);
 		$handler->register();
 	}
