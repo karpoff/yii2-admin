@@ -32,6 +32,8 @@ class ModelController extends yii\admin\components\AdminController
 	public $attributes;
 	public $canAddRecord = true;
 
+	public $sortable = false;
+
 	/**
 	 * @inheritdoc
 	 */
@@ -212,7 +214,7 @@ class ModelController extends yii\admin\components\AdminController
 		return $actions;
 	}
 
-	public function actionList()
+	protected function getListQuery()
 	{
 		$model = $this->model;
 		$query = $model::find();
@@ -220,10 +222,21 @@ class ModelController extends yii\admin\components\AdminController
 		if ($this->attributes)
 			$query->where($this->attributes);
 
-		$dataProvider = new ActiveDataProvider(['query' => $query]);
+		if ($this->sortable)
+			$query->orderBy('sort asc');
+
+		return $query;
+	}
+
+	public function actionList()
+	{
+		$dataProvider = new ActiveDataProvider(['query' => $this->getListQuery()]);
 		$dataProvider->setSort(false);
 
 		$data = [];
+		if ($this->sortable)
+			$data['sortable_url'] = $this->url('sort');
+
 		$data['grid_config'] = ['dataProvider' => $dataProvider];
 
 		$data['grid_config']['id'] = $this->id . '-list';
@@ -291,6 +304,20 @@ class ModelController extends yii\admin\components\AdminController
 			$this->model->scenario = $this->model->isNewRecord ? 'insert' : 'update';
 
 		if ($this->model->load(Yii::$app->request->post())) {
+			if (!$id && $this->sortable) {
+				$model = $this->model;
+				$sort = $model->getAttribute('sort');
+				if ($sort === null) {
+					$max_sort = $model::find()->select('MAX(sort) as max_sort')->asArray()->one();
+					if ($max_sort) {
+						$max_sort = intval($max_sort['max_sort']) + 10;
+					} else {
+						$max_sort = 0;
+					}
+					$model->setAttribute('sort', $max_sort);
+				}
+			}
+
 			if ($this->model->save()) {
 				$this->afterSave();
 				if ($this->editPopup) {
@@ -343,6 +370,31 @@ class ModelController extends yii\admin\components\AdminController
 
 		$title = $this->model->getIsNewRecord() ? 'Add' : static::modelTitle($this->model);
 		return $this->render('/model/form', ['config' => $config, 'title' => $title]);
+	}
+
+	public function actionSort() {
+		if (!$this->sortable)
+			throw new \HttpException(404);
+
+		$order = Yii::$app->request->get('order');
+		$records = [];
+		$sort = 0;
+		foreach ($order as $o) {
+			$records[$o] = $sort;
+			$sort += 10;
+		}
+
+		/** @var \yii\db\ActiveRecord $record */
+		foreach ($this->getListQuery()->all() as $record) {
+			$pk = $record->getPrimaryKey();
+			if (isset($records[$pk])) {
+				$record->setAttribute('sort', $records[$pk]);
+			} else {
+				$record->setAttribute('sort', $sort);
+				$sort += 10;
+			}
+			$record->save();
+		}
 	}
 
 	public function getFormFields()
