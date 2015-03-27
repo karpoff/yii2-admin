@@ -27,7 +27,6 @@ if (!empty($sortable_url)) {
 			return ui;
 		};
 		var rows_body = $("#<?=$grid_config['id']?> table:first tbody:first");
-		alert($('> tr', rows_body).size());
 		if ($('> tr', rows_body).size() > 1) {
 			rows_body.sortable({
 				axis: "y",
