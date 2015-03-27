@@ -26,25 +26,29 @@ if (!empty($sortable_url)) {
 			});
 			return ui;
 		};
-		$("#<?=$grid_config['id']?> table:first tbody:first").sortable({
-			axis: "y",
-			helper: fixHelper,
-			stop: function (e, ui) {
-				var order = [];
-				$("#<?=$grid_config['id']?> table:first tbody:first > tr").each(function() {
-					order.push($(this).attr('data-key'));
-				});
-				$('#loader').show();
-				$.get('<?=$sortable_url?>', {order: order})
-					.always(function() {
-						$('#loader').hide();
-					}).error(function() {
-						alert('error while sort update');
-						//window.location.reload();
+		var rows_body = $("#<?=$grid_config['id']?> table:first tbody:first");
+		alert($('> tr', rows_body).size());
+		if ($('> tr', rows_body).size() > 1) {
+			rows_body.sortable({
+				axis: "y",
+				helper: fixHelper,
+				stop: function (e, ui) {
+					var order = [];
+					$("#<?=$grid_config['id']?> table:first tbody:first > tr").each(function() {
+						order.push($(this).attr('data-key'));
 					});
-				console.log(order);
-			}
-		}).disableSelection();
+					$('#loader').show();
+					$.get('<?=$sortable_url?>', {order: order})
+						.always(function() {
+							$('#loader').hide();
+						}).error(function() {
+							alert('error while sort update');
+							window.location.reload();
+						});
+					console.log(order);
+				}
+			}).disableSelection();
+		}
 	});
 </script>
 <?
