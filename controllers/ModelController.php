@@ -34,6 +34,8 @@ class ModelController extends yii\admin\components\AdminController
 
 	public $sortable = false;
 
+	public $relation_filter = false;
+
 	/**
 	 * @inheritdoc
 	 */
@@ -167,6 +169,13 @@ class ModelController extends yii\admin\components\AdminController
 
 	public function editFieldFormats() { return []; }
 
+	public function getRelationFilter() {
+		$filter = is_array($this->relation_filter) ? $this->relation_filter : ['relation' => $this->relation_filter];
+		if (!isset($filter['value']))
+			$filter['value'] = Yii::$app->request->get('relation_filter');
+		return $filter;
+	}
+
 	public function listActions()
 	{
 		$actions = [
@@ -222,6 +231,14 @@ class ModelController extends yii\admin\components\AdminController
 		if ($this->attributes)
 			$query->where($this->attributes);
 
+		if ($this->relation_filter) {
+			$filter = $this->getRelationFilter();
+			$relation = $model->getRelation($filter['relation']);
+			$where = [];
+			foreach ($relation->link as $field)
+				$where = empty($filter['value']) ? new yii\db\Expression($field.' IS NULL') : [$field => $filter['value']];
+			$query->andWhere($where);
+		}
 		if ($this->sortable)
 			$query->orderBy('sort asc');
 
@@ -264,6 +281,30 @@ class ModelController extends yii\admin\components\AdminController
 			$addOptions['href'] =  $this->url('/' . Yii::$app->controller->id . '/relation', ArrayHelper::merge($link_params, ['action' => 'add']));
 		} else {
 			$addOptions['href'] =  $this->url('add');
+		}
+
+		if ($this->relation_filter) {
+			$filter = $this->getRelationFilter();
+			$relation = $this->model->getRelation($filter['relation']);
+			$remote_field = '';
+			foreach ($relation->link as $remote_field => $own_field)
+				break;
+			/** @var \yii\db\ActiveRecord $model */
+			$model = $relation->modelClass;
+
+			$relation_data = ['' => Yii::t('yii', '(not set)')];
+			foreach ($model::find()->all() as $id) {
+				$relation_data[$id->getAttribute($remote_field)] = (string) $id;
+			}
+			$params = Yii::$app->request->get();
+			unset($params['relation_filter']);
+			$params['relation_filter'] = '';
+
+			$data['relation_filter'] = [
+				'data' => $relation_data,
+				'current' => $filter['value'],
+				'url' => $this->url('list', $params),
+			];
 		}
 
 		if ($this->canAddRecord) {
@@ -325,7 +366,16 @@ class ModelController extends yii\admin\components\AdminController
 					return $this->model->primaryKey;
 				}
 
-				return $this->redirect($this->url('list'));
+				$params = [];
+				if ($this->relation_filter) {
+					$filter = $this->getRelationFilter();
+					$relation = $this->model->getRelation($filter['relation']);
+					$own_field = '';
+					foreach ($relation->link as $own_field)
+						break;
+					$params['relation_filter'] = $this->model->getAttribute($own_field);
+				}
+				return $this->redirect($this->url('list', $params));
 			}
 		}
 		$config = $this->jsModelFormOptions ? $this->jsModelFormOptions : [];

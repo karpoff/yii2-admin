@@ -1,5 +1,9 @@
 <?php
+/** \yii\web\View $this */
+use kartik\select2\Select2;
 use yii\grid\GridView;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
 /*echo \yii\bootstrap\Button::widget(['options' => ['id' => 'button-add', 'href' => $add, 'class' => 'btn btn-primary', 'style' => 'float: right;'], 'tagName' => 'a', 'label' => 'Add']);
 echo \yii\helpers\Html::tag('div', '', ['class' => 'clear']);
@@ -9,6 +13,27 @@ echo GridView::widget(array_merge(['id' => 'list-grid'], $grid_config));
 
 if (!empty($add))
 	echo $add;
+
+
+if (!empty($relation_filter)) {
+	echo Html::beginTag('div', ['style' => 'width:50%;']);
+	echo Select2::widget([
+		'id' => 'relation_select',
+		'data' => $relation_filter['data'],
+		'name' => 'relation',
+		'value' => $relation_filter['current'],
+		'options' => [
+			'multiple' => false,
+			'style' => 'width:100%;'
+		]
+	]);
+	echo Html::endTag('div');
+
+	$this->registerJs("$('#relation_select').change(function () {
+		window.location.href = '{$relation_filter['url']}' + $(this).val();
+	});");
+}
+
 
 echo \yii\helpers\Html::tag('div', '', ['class' => 'clear']);
 
@@ -44,7 +69,6 @@ if (!empty($sortable_url)) {
 							alert('error while sort update');
 							window.location.reload();
 						});
-					console.log(order);
 				}
 			}).disableSelection();
 		}
