@@ -252,7 +252,7 @@ class ModelController extends yii\admin\components\AdminController
 
 		$data = [];
 		if ($this->sortable)
-			$data['sortable_url'] = $this->url('sort');
+			$data['sortable_url'] = $this->url('sort', Yii::$app->request->get());
 
 		$data['grid_config'] = ['dataProvider' => $dataProvider];
 
