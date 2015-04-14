@@ -298,6 +298,7 @@ class ModelController extends yii\admin\components\AdminController
 			}
 			$params = Yii::$app->request->get();
 			unset($params['relation_filter']);
+			unset($params['page']);
 			$params['relation_filter'] = '';
 
 			$data['relation_filter'] = [
