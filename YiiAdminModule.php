@@ -22,6 +22,8 @@ class YiiAdminModule extends \yii\base\Module
 	public $lang;
 	public $noBreadcrumbs = false;
 
+	public $config_file;
+
 	/** @var \yii\admin\models\LangInterface $_language */
 	protected $_language;
 	/** @var \yii\db\ActiveRecord $_languages */
@@ -32,6 +34,12 @@ class YiiAdminModule extends \yii\base\Module
 
 	public function __construct($id, $parent = null, $config = [])
 	{
+		$_config = [];
+		if (isset($config['config_file'])) {
+			$_config = require(Yii::getAlias($config['config_file']));
+		}
+		$config = ArrayHelper::merge($_config, $config);
+
 		$config['components']['user']['class'] = 'yii\admin\components\user\User';
 
 		parent::__construct($id, $parent, $config);

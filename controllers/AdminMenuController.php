@@ -101,7 +101,7 @@ class AdminMenuController extends ModelController
 		parent::actionDelete($id);
 		return '<script>window.location.hash="'.$this->url('').'"; window.location.reload();</script>';
 	}
-	public function actionSort($id)
+	public function actionSort($id=null)
 	{
 		$this->model->findOne($id)->sort((int) Yii::$app->request->get('sort'));
 	}
