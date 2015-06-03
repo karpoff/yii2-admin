@@ -15,6 +15,7 @@ class MessageController extends \yii\admin\components\AdminController
 	public $category = 'app';
 	public $languages = null;
 
+	protected $editSource;
 	public function init() {
 		parent::init();
 
@@ -24,6 +25,8 @@ class MessageController extends \yii\admin\components\AdminController
 					$this->languages[] = $lang->getAttribute('code');
 			}
 		}
+
+		$this->editSource = YiiAdminModule::getInstance()->user->isAdmin;
 	}
 	public function actionIndex() {
 
@@ -46,7 +49,7 @@ class MessageController extends \yii\admin\components\AdminController
 
 		$config = [
 			'sources' => $sources,
-			'edit_source' => true,
+			'edit_source' => $this->editSource,
 			'languages' => $this->languages,
 		];
 
@@ -62,22 +65,24 @@ class MessageController extends \yii\admin\components\AdminController
 		/** @var MessageSource[] $sources */
 		$sources = ArrayHelper::index(MessageSource::find()->where(['category' => $this->category])->all(), function($el) { return 'id'.$el->id;});
 
-		foreach ($new_sources as $id => $new_source) {
-			if (isset($new_source['deleted']) || array_search(trim($new_source['message']), ['', '-']) !== false) {
-				if (isset($sources[$id])) {
-					$sources[$id]->delete();
-					unset($sources[$id]);
+		if ($this->editSource) {
+			foreach ($new_sources as $id => $new_source) {
+				if (isset($new_source['deleted']) || array_search(trim($new_source['message']), ['', '-']) !== false) {
+					if (isset($sources[$id])) {
+						$sources[$id]->delete();
+						unset($sources[$id]);
+					}
+					continue;
 				}
-				continue;
-			}
 
-			if (!isset($sources[$id])) {
-				$sources[$id] = new MessageSource();
-			}
+				if (!isset($sources[$id])) {
+					$sources[$id] = new MessageSource();
+					$sources[$id]->setAttribute('category', $this->category);
+				}
 
-			$sources[$id]->setAttribute('message', $new_source['message']);
-			$sources[$id]->setAttribute('category', $this->category);
-			$sources[$id]->save();
+				$sources[$id]->setAttribute('message', $new_source['message']);
+				$sources[$id]->save();
+			}
 		}
 
 		foreach (Message::find()->joinWith('source')->where(['category' => $this->category])->all() as $message) {
