@@ -59,6 +59,15 @@ class MessageController extends \yii\admin\components\AdminController
 		return $this->renderContent(MessageWidget::widget($config));
 	}
 
+	public function actionLoad() {
+
+		$data = ['mode' => 'load'];
+		if (Yii::$app->request->isPost) {
+			$this->load();
+		}
+
+		return $this->render('/admin/messages', $data);
+	}
 	protected function save() {
 
 		$new_sources = Yii::$app->request->post('sources');
@@ -105,6 +114,58 @@ class MessageController extends \yii\admin\components\AdminController
 				$message->setAttribute('language', $lang);
 				$message->setAttribute('translation', $translation);
 				$message->save();
+			}
+		}
+		Yii::$app->getCache()->flush();
+	}
+
+	protected function load() {
+		$new_messages = [];
+
+		foreach ($this->languages as $lang) {
+			$file = Yii::getAlias(Yii::$app->request->post('path').'/'.$lang.'/'.$this->category.'.php', false);
+
+			if (!file_exists($file))
+				continue;
+
+			$new_messages[$lang] = require($file);
+		}
+
+		if (Yii::$app->request->post('mode') == 'replace') {
+			Yii::$app->db->createCommand('TRUNCATE TABLE ' . MessageSource::tableName())->execute();
+			Yii::$app->db->createCommand('TRUNCATE TABLE ' . Message::tableName())->execute();
+		}
+
+		$current_sources = ArrayHelper::index(MessageSource::find()->where(['category' => $this->category])->all(), 'message');
+		$current_messages = [];
+
+		/** @var $message Message */
+		foreach (Message::find()->joinWith('source')->where(['category' => $this->category])->all() as $message) {
+			$current_messages[$message->source->getAttribute('message')][$message->getAttribute('language')] = $message;
+		}
+
+		foreach ($new_messages as $lang => $messages) {
+			foreach ($messages as $source_message => $message) {
+				if (!is_string($message))
+					continue;
+
+				if (!isset($current_sources[$source_message])) {
+					$s = new MessageSource();
+					$s->setAttribute('category', $this->category);
+					$s->setAttribute('message', $source_message);
+					$s->save();
+					$current_sources[$source_message] = $s;
+				}
+
+				if (!isset($current_messages[$source_message][$lang])) {
+					$m = new Message();
+					$m->setAttribute('language', $lang);
+					$current_messages[$source_message][$lang] = $m;
+				}
+
+				$current_messages[$source_message][$lang]->setAttribute('id', $current_sources[$source_message]->getAttribute('id'));
+				$current_messages[$source_message][$lang]->setAttribute('translation', $message);
+				$current_messages[$source_message][$lang]->save();
 			}
 		}
 	}
