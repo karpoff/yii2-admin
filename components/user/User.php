@@ -17,7 +17,7 @@ class User extends \yii\web\User
 				break;
 		}
 
-		$this->loginUrl = Url::toRoute('/admin-user/login');
+		$this->loginUrl = Url::toRoute('admin-user/login');
 
 		parent::__construct($config);
 	}
