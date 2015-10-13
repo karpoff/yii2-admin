@@ -41,7 +41,7 @@ class Relation extends ActiveField
 
 				$content .= (string) $this->form->field($this->model, $this->attribute)->widget(Select2::classname(), [
 					'data' => $data,
-					'pluginOptions' => ['allowClear' => true],
+					'pluginOptions' => ['allowClear' => true, 'placeholder' => \Yii::t('yii', '(not set)')],
 					'options' => ['multiple' => true],
 				]);
 			} else { //many-to-many with separate models
@@ -84,7 +84,8 @@ class Relation extends ActiveField
 			$content = (string) $this->form->field($this->model, $own_field)->widget(Select2::classname(), [
 				'data' => $data,
 				'pluginOptions' => [
-					'allowClear' => true
+					'allowClear' => true,
+					'placeholder' => \Yii::t('yii', '(not set)'),
 				],
 			]);
 		}
